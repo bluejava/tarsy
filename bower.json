@@ -1,0 +1,25 @@
+{
+  "name": "tarsy",
+  "version": "0.2.1",
+  "description": "Tarsy the Testing Tarsier - The little test framework with BIG EYES - JavaScript testing for busy people",
+  "main": "src/tarsy.js",
+  "authors": [
+    "Glenn Crownover <glenn@bluejava.com> (http://www.bluejava.com)"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "test",
+    "unit",
+    "testing",
+    "TDD",
+    "BDD",
+    "QA"
+  ],
+  "homepage": "https://github.com/bluejava/tarsy",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test"
+  ]
+}
