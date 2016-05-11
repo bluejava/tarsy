@@ -1,7 +1,7 @@
 /*
 	Tarsy - The little test suite with BIG EYES
 	see https://github.com/bluejava/tarsy.git
-	version 0.1.0
+	version 0.2.0
 	Licence: MIT
 */
 
