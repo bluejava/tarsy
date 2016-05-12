@@ -1,4 +1,4 @@
-# Tarsy
+# Tarsy 🐒
 
 Tarsy is a JavaScript test framework that focuses on simplicity, accuracy, and efficiency. It is the little test framework with **BIG EYES** for hunting bugs - It is *JavaScript testing for busy people.*
 
@@ -8,7 +8,9 @@ Tarsy is a JavaScript test framework that focuses on simplicity, accuracy, and e
 - Not only supports promises and asynchronicity, its fully asynchronous itself
 - Runs your tests simultaneously ensuring blistering fast test runs
 - Works in both Node and in the browser
-- Simple API - learn in 10-15 minutes
+- High resolution timing (to 1/100 ms)
+- Has command line "test runner" utility to easily run/script testing
+- Simple API - learn in 10 minutes
 - Easy to integrate with CI (continuous integration) services
 - Supports running some (or all) tests synchronously if required
 - Simple `equal` asserts. No `assert.that.variable(foo).is.less.than(25)` stuff to memorize
@@ -23,6 +25,34 @@ Tarsy is a JavaScript test framework that focuses on simplicity, accuracy, and e
 This is a *tarsier* - he is able to hunt  in light levels between 0.001 and 0.01 lux. What does he hunt? **Bugs** of course!
 
 ----------
+
+## Table of Contents
+
+  - [Introduction](#introduction)
+  - [Download](#download)
+  - [Installation / Incorporation](#installation--incorporation)
+  - [Usage](#usage)
+    - [A complete minimal example:](#a-complete-minimal-example)
+    - [Example with sections and multiple tests](#example-with-sections-and-multiple-tests)
+    - [Asynchronicity](#asynchronicity)
+  - [API Reference](#api-reference)
+    - [`assert(bool)`](#assertbool)
+    - [`assert.equal(actual,expected)`](#assertequalactualexpected)
+    - [`assert.deepEqual(actual, expected)`](#assertdeepequalactual-expected)
+    - [`assert.notDeepEqual(actual, expected)`](#assertnotdeepequalactual-expected)
+    - [`assert.throws(fn)`](#assertthrowsfn)
+    - [`assert.rejects(fn)`](#assertrejectsfn)
+    - [`getFailCount()`](#getfailcount)
+    - [`getPassFailCount([section])`](#getpassfailcountsection)
+    - [`section(name,fn,[opts])`](#sectionnamefnopts)
+    - [`setRootOpts(opts)`](#setrootoptsopts)
+    - [`showResults([section])`](#showresultssection)
+    - [`test(name,fn,[opts])`](#testnamefnopts)
+    - [`waitForCompletion()`](#waitforcompletion)
+  - [options](#options)
+
+
+## Introduction
 
 **Tarsy** is a minimalist testing framework that is super simple to build (no dependencies), easy to incorporate (single file, works in browser and node) and use (built-in asserts, minimal API). It is super fast, with an async-first approach - and not only supports Promises, but is woven together with them.
 
@@ -272,6 +302,20 @@ output:
 
 The following are all properties of the **Tarsy** object:
 
+- [`assert(bool)`](#assertbool)
+- [`assert.equal(actual,expected)`](#assertequalactualexpected)
+- [`assert.deepEqual(actual, expected)`](#assertdeepequalactual-expected)
+- [`assert.notDeepEqual(actual, expected)`](#assertnotdeepequalactual-expected)
+- [`assert.throws(fn)`](#assertthrowsfn)
+- [`assert.rejects(fn)`](#assertrejectsfn)
+- [`getFailCount()`](#getfailcount)
+- [`getPassFailCount([section])`](#getpassfailcountsection)
+- [`section(name,fn,[opts])`](#sectionnamefnopts)
+- [`setRootOpts(opts)`](#setrootoptsopts)
+- [`showResults([section])`](#showresultssection)
+- [`test(name,fn,[opts])`](#testnamefnopts)
+- [`waitForCompletion()`](#waitforcompletion)
+
 ### `assert(bool)`
 
 If the passed boolean is anything other than `true`, the assertion fails and an error is thrown.
@@ -517,7 +561,7 @@ Returns a promise that resolves when all tests have completed. Useful when wanti
 
 ```javascript
 
-// bunch-o-Tests
+// bunch-o-Tests go here
 
 Tarsy
 	.waitForCompletion()
@@ -532,5 +576,7 @@ Tarsy
 
 The following options are set via the `Tarsy.setRootOpts` to effect the root settings, or for a specific `section` or `test` by passing them in as the third parameter.
 
-	timeout		Number of ms to wait for asynchronous tests to complete. Default = 5000
-	async		If false, tests will wait for the previous test to complete. Default = true
+| Option       | Description                                                     | Default |
+| ------------ | --------------------------------------------------------------- | ------- |
+| **timeout**  | Number of ms to wait for asynchronous tests to complete         | 5000    |
+| **async**    | If false, each test will wait for the previous test to complete | true    |

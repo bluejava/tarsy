@@ -1,7 +1,7 @@
 /*
 	Tarsy - The little test suite with BIG EYES
 	see https://github.com/bluejava/tarsy.git
-	version 0.2.1
+	version 0.2.2
 	Licence: MIT
 */
 
@@ -111,6 +111,10 @@
 			}
 
 			// Create a new section object.
+			//	name : Used in reporting to identify the section
+			//	opts : optional configuration overrides for this section
+			//	parentSection : If this is a subsection, this is the parent section object
+			//	indent : The level deep this section is - used for report indenting
 			function newSection(name, opts, parentSection, indent)
 			{
 				opts = opts || {}
@@ -155,7 +159,11 @@
 					rootSection.opts[k] = opts[k]
 			}
 
-			// When we enter a new section, run this function which sets up a bit of bookkeeping
+			// When we enter a new section, run this function which creates the new section object
+			// based on the context of the sections stack and returns it.
+			//	sections : The section stack which reflects the "context" of this section
+			//	name : The section descriptor used in reporting
+			//	opts : The optional config overrides
 			function sectionOpen(sections, name, opts)
 			{
 				var parent = sections[sections.length - 1]
@@ -169,8 +177,10 @@
 				return section
 			}
 
-			// Should be called when we exit a section function
-			// child tests may still be running
+			// Should be called when we exit a section function within a given context.
+			// Note: Child tests may still be running - this section is not "complete"
+			//	sections : The section stack which reflects the "context" of this section
+			//	section : The section whose function we are exiting
 			function sectionClose(sections, section)
 			{
 				// Create a promise to return from the section function - it resolves when all "child promises" resolve
@@ -188,7 +198,11 @@
 				return sections.pop()
 			}
 
-			// This is the public API function for "section"
+			// This is the public API function for "section" - it creates the new section and runs the
+			// section function that is passed.
+			//	name : The section descriptor used in reporting
+			//	fn : The section function which contains the tests and subsections
+			//	opts : The optional config overrides for this section
 			function section(name, fn, opts)
 			{
 				// create a new section object
@@ -216,6 +230,10 @@
 					})
 			}
 
+			// Returns the dot-separated numeric representation of this section (i.e. 1.2.1). It is determined by
+			// traversing up the parental stack and numbering each section based on its place within
+			// its parent's list of subsections. The "root" section (no parent) returns an empty string.
+			//	section : The section for which to return a section number
 			function getSectionNum(section)
 			{
 				if(section.parent)
@@ -225,6 +243,8 @@
 					return ""
 			}
 
+			// utility function to set appropriate properties in the test object for a test that has failed,
+			// and to complete the test.
 			function failTest(test, e)
 			{
 				test.failed = true
@@ -234,6 +254,8 @@
 				return testDone(test)
 			}
 
+			// utility function to set appropriate properties in the test object for a test that has passed,
+			// and to complete the test.
 			function passTest(test, ret)
 			{
 				test.passed = true
@@ -242,6 +264,8 @@
 				return testDone(test)
 			}
 
+			// utility function to complete a test - it stops the timer, sets complete to true and logs any
+			// exception messages.
 			function testDone(test)
 			{
 				test.time = end(test.timer)
@@ -256,6 +280,10 @@
 				return test
 			}
 
+			// Returns an option value for a given test or section by traversing up the parental hierarchy until
+			// it finds a setting for that option. If no setting is found, undefined is returned.
+			//	o : The object upon which an option is to be determined (a test or section)
+			//	name : The option name to be determined.
 			function getOpt(o, name)
 			{
 				if(o.opts[name] !== undefined)
@@ -265,11 +293,12 @@
 				return o.section ? getOpt(o.section, name) : o.parent ? getOpt(o.parent, name) : undefined
 			}
 
-			/*
-				Public facing test function  - creates a test within the currently active section and launches
-				the test asyncronously. Returns a promise that resolves when the test completes (regardless
-				of test pass or fail)
-			*/
+			// Public facing test function  - creates a test within the currently active section and launches
+			// the test asyncronously. Returns a promise that resolves when the test completes (regardless
+			// of test pass or fail)
+			//	name : The name or descriptor of the test - used in reporting
+			//	fn : The function to call for this test, containing the asserts and testing code
+			//	opts : Optional configuration overrides for this test
 			function test(name, fn, opts)
 			{
 				opts = opts || { }
@@ -338,7 +367,9 @@
 			}
 
 			// simply appends an output line to the browser - currently this done in a very
-			// primitive way - but should work well enough for a test suite.
+			// primitive way (appending to body) - but should work well enough for a test suite.
+			//	msg : Text message to display
+			//	indent : Indent level (0-5) which sets a class for indenting the text
 			function appendLineToBrowserWindow(msg, indent)
 			{
 				// completely empty DIV elements have no height - so force some conten (non-breaking space)
@@ -361,7 +392,10 @@
 					setTimeout(flushLog, 50)
 			}
 
-			// logs an output line to the browser with a given indent level.
+			// logs an output line to the browser with a given indent level. If the browser DOM is not ready
+			// we hold the line and dump it once the browser DOM is ready.
+			//	msg : Text message to display
+			//	indent : Indent level (0-5) which sets a class for indenting the text
 			function logBrowser(msg, indent)
 			{
 				// If the DOM is ready, append away!
@@ -384,6 +418,8 @@
 			//var clogTimeStart = Date.now()
 
 			// Console log function - indent level supported with 4 spaces for each indent level.
+			//	msg : Text message to display
+			//	indent : Indent level (0-5) which prepends spaces (4 per level)
 			function clog(msg, indent)
 			{
 				indent = indent || 0
@@ -392,6 +428,8 @@
 			}
 
 			// Log an output line to the appropriate context (browser or console)
+			//	msg : Text message to display
+			//	indent : Indent level (0-5) used in formating
 			function log(msg, indent)
 			{
 				indent = indent || 0
@@ -401,13 +439,16 @@
 					clog(msg, indent)
 			}
 
-			// Returns a promise of the failure count
+			// Returns the number of failed tests (so far). To get a final count, call this
+			// after first calling waitForCompletion().
 			function getFailCount()
 			{
 				return getPassFailCount(rootSection).fail
 			}
 
 			// recursively sum the pass/fail of our subsections, then add our own pass/fail counts
+			// To get a final count, call this after first calling waitForCompletion().
+			//	section : optional section object which limits the pass/count to this section only
 			function getPassFailCount(section)
 			{
 				section = section || rootSection
@@ -422,6 +463,8 @@
 
 			/*			REPORTING 		*/
 
+			// Displays the test report
+			//	section : optional section for which this report will be limited to.
 			function showResults(section)
 			{
 				section = section || rootSection
@@ -460,7 +503,7 @@
 			// s(2,"test") + " failed." = "2 tests failed."
 			function s(c, w) { return c + " " + (c === 1 ? w : w + "s") }
 
-			// Logs a nicely formatted line showing the results of a single test
+			// Logs a nicely formatted line showing the results of a single test with a given indent level.
 			function showTestResult(test, indent)
 			{
 				log(
