@@ -38,7 +38,9 @@ Promise.all(promises)
 	.then(Tarsy.waitForCompletion)
 	.then(function() { return Tarsy.showResults() })	// this actually waits for completion itself, but leave above in for clarity
 	.then(function() {
-			process.exit(Tarsy.getFailCount() ? 1 : 0) // return status of 0 for all tests passed, 1 for errors
+			process.on('exit', function() {
+					process.exit(Tarsy.getFailCount() ? 1 : 0) // return status of 0 for all tests passed, 1 for errors
+				})
 		})
 	.catch(function(err) {
 			if(err.stack)
