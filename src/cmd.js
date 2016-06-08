@@ -1,7 +1,15 @@
 #! /usr/bin/env node
 
 /*
-	This is the command line program.
+	command line utility for Tarsy
+	see https://github.com/bluejava/tarsy.git
+	version 0.2.5
+	Licence: MIT
+*/
+
+/*
+	This is the command line program which makes it easier to write and run tests from a shell environment. It defines global variables
+	for Tarsy, section, test and assert so you can use them in your test files without a require.
 
 	To install:
 		npm install -g tarsy
@@ -19,7 +27,7 @@
 	Node-specific code (such as extra asserts), it can be used within the browser as well.
 */
 var path = require("path"),
-    	fs = require("fs")
+	fs = require("fs")
 
 var Tarsy = require("./tarsy.js")
 
@@ -31,14 +39,14 @@ global.assert = Tarsy.assert
 
 // treat each argument as a file (or directory) to process
 var promises = []
-for(var x=2;x<process.argv.length;x++)
-	promises.push(handleFileOrDir(process.cwd(),process.argv[x]))
+for(var x = 2;x < process.argv.length;x++)
+	promises.push(handleFileOrDir(process.cwd(), process.argv[x]))
 
 Promise.all(promises)
 	.then(Tarsy.waitForCompletion)
 	.then(function() { return Tarsy.showResults() })	// this actually waits for completion itself, but leave above in for clarity
 	.then(function() {
-			process.on('exit', function() {
+			process.on("exit", function() {
 					process.exit(Tarsy.getFailCount() ? 1 : 0) // return status of 0 for all tests passed, 1 for errors
 				})
 		})
@@ -50,10 +58,10 @@ Promise.all(promises)
 		})
 
 // Determine the file the user wishes to process - if it is a directory, process all javascript contained
-function handleFileOrDir(parentDir,name)
+function handleFileOrDir(parentDir, name)
 {
-	return new Promise(function(resolve,reject) {
-			var filename = path.format({dir: parentDir, base:name})
+	return new Promise(function(resolve, reject) {
+			var filename = path.format({dir: parentDir, base: name})
 			fs.stat(filename, function(err, stats) {
 					if(err)
 						reject(Error("Error processing " + filename + "\n" + err))
@@ -63,7 +71,7 @@ function handleFileOrDir(parentDir,name)
 									if(err)
 										reject(Error("Error processing directory " + filename + "\n" + err))
 									else
-										resolve(processFiles(filename,files))
+										resolve(processFiles(filename, files))
 								})
 						else
 						{
@@ -76,13 +84,13 @@ function handleFileOrDir(parentDir,name)
 
 // This function handles an array of file names that are contained within a
 // parent directory. First, filter out any non-js files, then process them.
-// TODO: consider recursively processing subdirectories as well (as option?)
-function processFiles(directory,files)
+// CONSIDER: recursively processing subdirectories as well (as option?)
+function processFiles(directory, files)
 {
 	return Promise.all(
 		files
 			.filter(function(f) { return f.endsWith(".js") })
 			.map(function(f) {
-					return handleFileOrDir(directory,f)
+					return handleFileOrDir(directory, f)
 				}))
 }
