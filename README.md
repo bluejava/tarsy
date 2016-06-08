@@ -578,5 +578,6 @@ The following options are set via the `Tarsy.setRootOpts` to effect the root set
 
 | Option       | Description                                                     | Default |
 | ------------ | --------------------------------------------------------------- | ------- |
-| **timeout**  | Number of ms to wait for asynchronous tests to complete         | 5000    |
-| **async**    | If false, each test will wait for the previous test to complete | true    |
+| **timeout**  | Number of ms to wait for asynchronous tests to complete         | `5000`    |
+| **async**    | If false, each test will wait for the previous test to complete | `true`    |
+| **logOutput**  | When testing in browser, log output to this DOM element (root setting only) | `document.body` |

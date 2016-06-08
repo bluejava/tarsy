@@ -1,7 +1,7 @@
 /*
 	Tarsy - The little test suite with BIG EYES
 	see https://github.com/bluejava/tarsy.git
-	version 0.2.5
+	version 0.3.0
 	Licence: MIT
 */
 
@@ -375,7 +375,8 @@
 				// completely empty DIV elements have no height - so force some conten (non-breaking space)
 				if(msg === "")
 					msg = "&nbsp;"
-				document.body.innerHTML += "<div class=\"Tarsy-indent" + indent + "\">" + msg + "</div>"
+				var logOutput = rootSection.opts.logOutput || document.body
+				logOutput.innerHTML += "<div class=\"Tarsy-indent" + indent + "\">" + msg + "</div>"
 			}
 
 			// Once the browser DOM is ready, we can output any lines that were queued for output
