@@ -219,6 +219,17 @@ section("synchronous testing", function() {
 		})
 }, { async: false })
 
+section("Adding Tests Asynchronously", function(ataSection) {
+
+		return new Promise(function(resolve,reject) {
+				setTimeout(function() {
+						test("ATA test 1", function() { assert(true) }, {section: ataSection})
+						resolve()
+					}, 300)
+			})
+
+})
+
 // returns a promise that resolves after then specified number of milliseconds
 function delay(ms)
 {

@@ -1,7 +1,7 @@
 /*
 	Tarsy - The little test suite with BIG EYES
 	see https://github.com/bluejava/tarsy.git
-	version 0.3.0
+	version 0.4.0
 	Licence: MIT
 */
 
@@ -129,6 +129,7 @@
 					name: name,	// the name of our section
 					opts: opts,		// opts overrides for this section (and its children, lest they be overridden)
 					parent: parentSection,
+					status: "open",
 					passCount: 0,		// passed tests directly contained in this section
 					timer: start()
 				}
@@ -138,18 +139,27 @@
 			// contained tests complete)
 			function waitForSectionCompletion(section)
 			{
-				return Prom.all(section.childPromises)
+				if(!section.promise) // just for root section
+				{
+					section.promise = new Prom(function(resolve,reject) {
+							setTimeout(function() {
+									resolve(sectionClose(currentSections, section)
+										.then(sectionComplete))
+								}, 100)
+					})
+				}
+
+				return section.promise
 			}
 
 			// the root section - parent of any tests not contained within a defined section
-			var rootSection = newSection("Total Test Run", {
+			var currentSections = [],
+				rootSection = sectionOpen(currentSections,"Total Test Run", {
 						async: true,			// if false, each test waits for previous to finish
 						maxFailures: 10,		// maximum failures allows within this section
 						timeout: 5000,			// timeout for any given test
 						sectionTimeout: 0	// Timeout for this entire section
-					}),
-				currentSections = [rootSection]
-			rootSection.timer = start()
+					})
 
 			// sets the root section options as specified here. Any options not specified here
 			// remain as they are currently.
@@ -174,6 +184,8 @@
 				if(section.parent)
 					section.parent.childSections.push(section)
 
+				log(blueTxt("Started") + " section: " + getSectionNum(section) + " - " + name, section.indent)
+
 				return section
 			}
 
@@ -183,19 +195,19 @@
 			//	section : The section whose function we are exiting
 			function sectionClose(sections, section)
 			{
-				// Create a promise to return from the section function - it resolves when all "child promises" resolve
-				// Child promises are sub-section promises and immediately contained test promises
-				section.promise = Prom.all(section.childPromises)
+				assert.equal(section.status,"open")
+				section.status = "closed" // no more tests may be applied to this section
+				return Prom.all(section.childPromises) // all tests are in, so now we await their completion
+					.then(function() { return section }) // resolve to our section object
+			}
 
-				if(section.parent)
-					section.parent.childPromises.push(section.promise)
-
-				// When all child promises resolve, we can stop the timer
-				section.promise.then(function() {
-						section.time = end(section.timer)
-					})
-
-				return sections.pop()
+			function sectionComplete(section)
+			{
+				section.status = "complete" // no more tests may be applied to this section
+				section.time = end(section.timer)
+				log(blueTxt("Finished") + " section: " + getSectionNum(section) + " - " + section.name, section.indent)
+				log("")
+				return section
 			}
 
 			// This is the public API function for "section" - it creates the new section and runs the
@@ -208,26 +220,28 @@
 				// create a new section object
 				var section = sectionOpen(currentSections, name, opts)
 
-				log(blueTxt("Started") + " section: " + getSectionNum(section) + " - " + name, section.indent)
+				// Run the section function passing it the section object
+				var fnRet = fn(section)
 
-				// Run the section function
-				fn()
+				// when this promise resolves, the section is "closed" - i.e. no more tests may be added
+				var closeProm = fnRet && fnRet.then ? fnRet : Prom.resolve()
 
-				// close this section - The section function has completed.
-				// But note - tests within this section may still be running!
-				sectionClose(currentSections, section)
-
-				section.promise.then(function() {
-						log(blueTxt("Finished") + " section: " + getSectionNum(section) + " - " + name, section.indent)
-						log("")
-					})
-
-				// create new promise to return so we can resolve to section object
-				return new Prom(function(resolve) {
-						section.promise.then(function() {
-								resolve(section)
+				// Create a promise to return from the section function - it resolves when all "child promises" resolve
+				// Child promises are sub-section promises and immediately contained test promises
+				section.promise = closeProm.then(function() {
+								// close this section - The section function has completed.
+								// But note - tests within this section may still be running!
+								return sectionClose(currentSections, section)
 							})
-					})
+
+				section.promise.then(sectionComplete)
+
+				if(section.parent)
+					section.parent.childPromises.push(section.promise)
+
+				currentSections.pop() // remove this section from the currentSections list
+
+				return section.promise
 			}
 
 			// Returns the dot-separated numeric representation of this section (i.e. 1.2.1). It is determined by
@@ -247,11 +261,45 @@
 			// and to complete the test.
 			function failTest(test, e)
 			{
+				// Make our best guess at the name of this javascript src file so we can remove from stack
+				var thisSrcFile = "tarsy.js"
+				if(typeof(__filename) == "string")
+					thisSrcFile = __filename
+
 				test.failed = true
+
 				test.e = e
+
+				// If a stack trace is present, attach as array (minus lines pertaining to tarsy)
+				if(e.stack)
+					test.e.stack = stackFilter(e.stack,thisSrcFile + "|native","^[ ]*at")
+
 				test.section.failCount++
 
+				// log the stack trace - attempt to make it more readable by removing lines referencing THIS file
+				if(e.stack)
+					log(redTxt(test.e.stack.join("\n")), test.section.indent + 1)
+
 				return testDone(test)
+			}
+
+			// Filters a stack trace by a regular expression - either as
+			// an exlcude regex, an include (only) regex, or both.
+			// Stack may either be an array, or a stack trace string is separated by LF (\n)
+			// Returns in array form
+			function stackFilter(stack,exclude,include)
+			{
+				if(!Array.isArray(stack))
+					stack = stack.split("\n")
+
+				return stack.filter(function(stackLine) {
+						var keep = true
+						if(include)
+							keep = stackLine.search(include) >= 0
+						if(exclude)
+							keep = keep && stackLine.search(exclude) < 0
+						return keep
+					})
 			}
 
 			// utility function to set appropriate properties in the test object for a test that has passed,
@@ -304,6 +352,13 @@
 				opts = opts || { }
 
 				var section = currentSections[currentSections.length - 1]
+
+				if(opts.section)
+					section = opts.section
+
+				if(section.status !== "open")
+					throw Error("Attempt to add test to closed section: " + section.name)
+
 				var test = { name: name, section: section, opts: opts, indent: section.indent + 1 }
 
 				var runtest = function runtest(resolve, reject) // eslint-disable-line no-unused-vars
@@ -318,7 +373,7 @@
 						if(ret instanceof Error)
 							resolve(failTest(test, ret))
 						else
-							if(typeof ret !== "undefined" && ret && ret.then && typeof ret.then == "function")  // eslint-disable-line curly
+							if(ret && ret.then && typeof ret.then == "function")  // eslint-disable-line curly
 							{
 								ret.then(function(ret) {
 										if(!test.complete)
@@ -342,23 +397,29 @@
 
 						function start()
 						{
-							runtest(resolve, reject)
-							var testTimeout = getOpt(test, "timeout")
-							var timeoutHandle = setTimeout(function() {
-									if(!test.complete)
-									{
-										failTest(test, Error("Timeout (" + testTimeout + "ms)"))
-										resolve(test)
-									}
-								}, testTimeout)
-							testPromise.then(function() { clearTimeout(timeoutHandle) })
+							try
+							{
+								runtest(resolve, reject)
+								var testTimeout = getOpt(test, "timeout")
+								var timeoutHandle = setTimeout(function() {
+										if(!test.complete)
+										{
+											failTest(test, Error("Timeout (" + testTimeout + "ms)"))
+											resolve(test)
+										}
+									}, testTimeout)
+								testPromise.then(function() { clearTimeout(timeoutHandle) })
+							}
+							catch (er) {
+									failTest(test, er)
+									resolve(test)
+								}
 						}
 
 						if(!getOpt(test, "async") && lastTestProm)
 							lastTestProm.then(start, start)
 						else
 							setTimeout(start, 0)
-
 					})
 
 				lastTestProm = testPromise
@@ -466,15 +527,14 @@
 
 			// Displays the test report
 			//	section : optional section for which this report will be limited to.
-			function showResults(section)
+			function showResults()
 			{
-				section = section || rootSection
+				return showResultsForSection(rootSection)
+			}
 
+			function showResultsForSection(section)
+			{
 				return waitForSectionCompletion(section)
-					.catch(function(e) {
-						log("")
-						log("Error: " + e)
-					})
 					.then(function() {
 
 						// Update Total test time, as this is never explicitly closed by the user - so it acts like
@@ -487,7 +547,7 @@
 						log("Results for " + section.name)
 						log("----------------------------------")
 
-						showSectionResults(section, 0)
+						return showSectionResults(section, 0)
 
 						/*if(failures >= abortOnFailCount)
 						{
@@ -534,11 +594,9 @@
 						if(test.failed)
 							if(test.e)
 							{
-								// suppress the stack trace if it is an assertion error or a timeout (IDEA: option to override suppression?)
-								if(test.e.stack && test.e.message.indexOf("Assertion") < 0 && test.e.message.indexOf("Timeout") < 0)
-									log(redTxt(test.e.stack), indent + 2)
-								else
-									log(redTxt(test.e.message), indent + 2)
+								log(redTxt(test.e.message), indent + 2)
+								if(test.e.stack)
+									log(redTxt(test.e.stack[0]), indent + 2)
 							}
 				})
 
@@ -648,6 +706,7 @@
 			section: section,
 			setRootOpts: setRootOpts,
 			showResults: showResults,
+			showResultsForSection: showResultsForSection,
 			test: test,
 			waitForCompletion: function() { return waitForSectionCompletion(rootSection) }
 		}

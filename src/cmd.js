@@ -3,7 +3,7 @@
 /*
 	command line utility for Tarsy
 	see https://github.com/bluejava/tarsy.git
-	version 0.3.0
+	version 0.4.0
 	Licence: MIT
 */
 
@@ -44,7 +44,7 @@ for(var x = 2;x < process.argv.length;x++)
 
 Promise.all(promises)
 	.then(Tarsy.waitForCompletion)
-	.then(function() { return Tarsy.showResults() })	// this actually waits for completion itself, but leave above in for clarity
+	.then(Tarsy.showResults)	// this actually waits for completion itself, but leave above in for clarity
 	.then(function() {
 			process.on("exit", function() {
 					process.exit(Tarsy.getFailCount() ? 1 : 0) // return status of 0 for all tests passed, 1 for errors

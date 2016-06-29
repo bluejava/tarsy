@@ -5,7 +5,7 @@ Tarsy is a JavaScript test framework that focuses on simplicity, accuracy, and e
 ## Key Features
 
 - Single file; no dependencies; no "installation" simplicity
-- Not only supports promises and asynchronicity, its fully asynchronous itself
+- Not only supports Promises and asynchronicity, its fully asynchronous itself
 - Runs your tests simultaneously ensuring blistering fast test runs
 - Works in both Node and in the browser
 - High resolution timing (to 1/100 ms)
@@ -35,6 +35,7 @@ This is a *tarsier* - he is able to hunt  in light levels between 0.001 and 0.01
     - [A complete minimal example:](#a-complete-minimal-example)
     - [Example with sections and multiple tests](#example-with-sections-and-multiple-tests)
     - [Asynchronicity](#asynchronicity)
+      - [adding tests asynchronously](#Adding-tests-asynchronously)
   - [API Reference](#api-reference)
     - [`assert(bool)`](#assertbool)
     - [`assert.equal(actual,expected)`](#assertequalactualexpected)
@@ -202,9 +203,9 @@ Lets explore the asynchronous nature a bit more:
 
 ### Asynchronicity
 
-**Tarsy** is intrinsically asynchronous. All tests return a promise which is resolved when the test completes. Each section also returns a promise that resolves when all tests within that section completes.
+**Tarsy** is intrinsically asynchronous. All tests return a `Promise` which is resolved when the test completes. Each section also returns a `Promise` that resolves when all tests within that section completes.
 
-Tests can execute asynchronous code as well - just have your test return a promise. If that promise resolves to a non-error value (before the timeout), the test will pass.
+Tests can execute asynchronous code as well - just have your test return a `Promise`. If that `Promise` resolves to a non-error value (before the timeout), the test will pass.
 
 **Quiz**: How long do you think the following set of tests will take to complete?
 
@@ -263,7 +264,7 @@ section("sync tests", function() {
 
 #### Problem 2: Errors occurring in asynchronous code are not tied to their test
 
-This is true in some cases with some testing frameworks, but promises essentially eliminate the problem entirely. For example:
+This is true in some cases with some testing frameworks, but Promises essentially eliminate the problem entirely. For example:
 
 ```javascript
 test("1 second test, then error", function() {
@@ -276,7 +277,7 @@ test("immediate pass", function() {
 		assert(true)
 	})
 ```
-When running the above tests in the default asynchronous mode, the 2nd "immediate pass" test finishes first, while the 1st test delays for a second and then fails an assert. The error is propagated to the enclosing promise and fails the appropriate test:
+When running the above tests in the default asynchronous mode, the 2nd "immediate pass" test finishes first, while the 1st test delays for a second and then fails an assert. The error is propagated to the enclosing `Promise` and fails the appropriate test:
 
 ![](images/example4.png)
 
@@ -297,6 +298,28 @@ test("immediate pass", function() {
 output:
 
 ![](images/example4b.png)
+
+#### Adding Tests Asynchronously
+
+Tests that run asynchronously is one thing, but what if you want to ***add*** a test asynchronously? Perhaps you wish to retrieve a resource using an asynchronous mechanism and then proceed to run tests against it.
+
+**Note:** Some may consider this bad practice, as generally setup and teardown should be performed *per test*. But there are legitimate cases in which one may wish to create tests asynchronously, so Tarsy makes it possible.
+
+To add tests asynchronously requires two steps:
+
+1. Return a `Promise` from the section containing those tests. Resolve this `Promise` when you are done adding tests to that section.
+2. Assign the test to the section by specifying the section object in the tests options as the `section` property. This section object is passed to the section function:
+
+```javascript
+section("async test add", function(ataSection) {
+	return new Promise(function(resolve,reject) {
+		setTimeout(function() {
+			test("test 1", function() { assert(false) }, {section: ataSection})
+			resolve()
+		}, 3000)
+	})
+})
+```
 
 ## API Reference
 
@@ -420,11 +443,11 @@ assert.throws(function() {
 
 ### `assert.rejects(fn)`
 
-This assert passes when the function specified **returns a promise** and **that promise is rejected**.
+This assert passes when the function specified **returns a `Promise`** and **that `Promise` is rejected**.
 
-This is useful for testing expected errors within asynchronous code. It is different from the others in that it also returns a promise that will resolve if the assert passes and reject if the assert fails.
+This is useful for testing expected errors within asynchronous code. It is different from the others in that it also returns a `Promise` that will resolve if the assert passes and reject if the assert fails.
 
-The test function within which this assert appears must also return a promise and pass on the resolve/reject status of this assert. The easiest way to do this is to simply return the result from this assert as the last statement of your test:
+The test function within which this assert appears must also return a `Promise` and pass on the resolve/reject status of this assert. The easiest way to do this is to simply return the result from this assert as the last statement of your test:
 
 ```javascript
 test("Reading Network Resource", function() {
@@ -480,6 +503,8 @@ Tarsy.waitForCompletion()
 
 This is the function to call when defining a testing section. You must give it a name (which is used in reporting) and a function which contains all the tests and subsection calls for this section.
 
+Function `fn` is passed the section object, which can be used for [adding tests asynchronously](#Adding-tests-asynchronously), if needed.
+
 The optional `opts` argument is a set of options that override parent options and are in effect for this section only. See the full list of config options below.
 
 #### Example:
@@ -528,7 +553,7 @@ Tarsy.setRootOpts({
 
 Displays the standard report for either the specified `section` or for all tests. This function first waits for all tests contained within the section being reported to finish.
 
-**Note:** Since the `section` function returns a promise that resolves with that sections' object, you can use the promise to obtain a handle on that section and pass it to showResults if desired:
+**Note:** Since the `section` function returns a `Promise` that resolves with that sections' object, you can use the `Promise` to obtain a handle on that section and pass it to showResults if desired:
 
 ```javascript
 section("user", function() {
@@ -555,7 +580,7 @@ test("addition", function() {
 
 ### `waitForCompletion()`
 
-Returns a promise that resolves when all tests have completed. Useful when wanting to return a pass/fail count for example. (See `getPassFailCount()` above)
+Returns a `Promise` that resolves when all tests have completed. Useful when wanting to return a pass/fail count for example. (See `getPassFailCount()` above)
 
 #### Example:
 
@@ -578,6 +603,7 @@ The following options are set via the `Tarsy.setRootOpts` to effect the root set
 
 | Option       | Description                                                     | Default |
 | ------------ | --------------------------------------------------------------- | ------- |
-| **timeout**  | Number of ms to wait for asynchronous tests to complete         | `5000`    |
 | **async**    | If false, each test will wait for the previous test to complete | `true`    |
-| **logOutput**  | When testing in browser, log output to this DOM element (root setting only) | `document.body` |
+| **logOutput**  | When testing in browser, log output to this DOM element (root setting only) |`document.body` |
+| **section** | Used to specify the parent section for asynchronously assigned tests | *containing section* | 
+| **timeout**  | Number of ms to wait for asynchronous tests to complete         | `5000`    |
