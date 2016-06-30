@@ -1,7 +1,7 @@
 /*
 	Tarsy - The little test suite with BIG EYES
 	see https://github.com/bluejava/tarsy.git
-	version 0.4.0
+	version 0.4.1
 	Licence: MIT
 */
 
@@ -22,7 +22,6 @@
 			// Lean towards Zousan, but use native Promise (or shim) if Zousan not available (see github.com/bluejava/zousan)
 			var Prom = typeof Zousan !== "undefined" ? Zousan : typeof Promise !== "undefined" ? Promise : null,
 				logQueue = [], // hold any log lines while browser gets ready..
-				lastTestProm,
 				spaces = "                                                                   " // used for  indenting console log lines
 
 			if(!Prom)
@@ -416,13 +415,14 @@
 								}
 						}
 
-						if(!getOpt(test, "async") && lastTestProm)
-							lastTestProm.then(start, start)
+						// If this test is running in syncronous mode, await the last section promise.
+						if(!getOpt(test, "async") && section.lastTestProm)
+							section.lastTestProm.then(start, start)
 						else
 							setTimeout(start, 0)
 					})
 
-				lastTestProm = testPromise
+				section.lastTestProm = testPromise	// store the last test promise in this section (for sync. option)
 				section.childPromises.push(testPromise)
 				return testPromise
 			}
