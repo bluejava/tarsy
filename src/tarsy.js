@@ -1,7 +1,7 @@
 /*
 	Tarsy - The little test suite with BIG EYES
 	see https://github.com/bluejava/tarsy.git
-	version 0.4.1
+	version 0.5.0
 	Licence: MIT
 */
 
@@ -30,6 +30,16 @@
 			// supports browser output, colored TTY output, or plain text
 			var txtMode = typeof process === "object" && process.stdout && process.stdout.isTTY ?
 				"TTY" : typeof window == "object" ? "browser" : "plain"
+
+			// the root section - parent of any tests not contained within a defined section
+			var currentSections = [],
+				rootOptions = {
+						async: true,			// if false, each test waits for previous to finish
+						maxFailures: 10,		// maximum failures allows within this section
+						timeout: 5000,			// timeout for any given test
+						sectionTimeout: 0	// Timeout for this entire section
+					},
+				rootSection = sectionOpen(currentSections, "Total Test Run", rootOptions)
 
 			// If this is a browser, add our stylesheet (so you don't have to link it in seperately)
 			if(txtMode === "browser")
@@ -150,15 +160,6 @@
 
 				return section.promise
 			}
-
-			// the root section - parent of any tests not contained within a defined section
-			var currentSections = [],
-				rootSection = sectionOpen(currentSections,"Total Test Run", {
-						async: true,			// if false, each test waits for previous to finish
-						maxFailures: 10,		// maximum failures allows within this section
-						timeout: 5000,			// timeout for any given test
-						sectionTimeout: 0	// Timeout for this entire section
-					})
 
 			// sets the root section options as specified here. Any options not specified here
 			// remain as they are currently.
@@ -436,7 +437,7 @@
 				// completely empty DIV elements have no height - so force some conten (non-breaking space)
 				if(msg === "")
 					msg = "&nbsp;"
-				var logOutput = rootSection.opts.logOutput || document.body
+				var logOutput = rootOptions.logOutput || document.body
 				logOutput.innerHTML += "<div class=\"Tarsy-indent" + indent + "\">" + msg + "</div>"
 			}
 
