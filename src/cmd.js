@@ -3,7 +3,6 @@
 /*
 	command line utility for Tarsy
 	see https://github.com/bluejava/tarsy.git
-	version 0.5.0
 	Licence: MIT
 */
 

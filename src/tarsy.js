@@ -1,7 +1,7 @@
 /*
 	Tarsy - The little test suite with BIG EYES
 	see https://github.com/bluejava/tarsy.git
-	version 0.5.0
+	version 0.5.1
 	Licence: MIT
 */
 
@@ -627,9 +627,16 @@
 			// An object equality tester that considers prototypes (as Node's assert.deepEqual does not)
 			function equals(a, b, deep)
 			{
-				// for native types, use ===
+				if(a === b)
+					return true
+
+				// oddly, NaN !== NaN so have to check this way
+				if(typeof a === "number" && typeof b === "number" && isNaN(a) && isNaN(b))
+					return true
+
+				// for native types and functions, we use ===, so getting here means we failed above test...
 				if(typeof a != "object" || typeof b != "object")
-					return a === b
+					return false
 
 				// if one or both are null, thats easy
 				if(a === null)
@@ -640,6 +647,10 @@
 
 				// ok, so they are both a non-null object/Array type - so check props on each of a
 				for(var ak in a)
+				{
+					if(!(ak in b))
+						return false
+
 					if(deep)
 					{
 						if(!equals(a[ak], b[ak], true))
@@ -648,10 +659,11 @@
 					else
 						if(a[ak] !== b[ak])
 							return false
+				}
 
 				// then ensure there are no "extra" types in b
 				for(var bk in b)
-					if(a[bk] === undefined)
+					if(!(bk in a))
 						return false
 
 				// we passed all the object tests, so we are equal!

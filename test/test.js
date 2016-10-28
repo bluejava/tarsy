@@ -1,7 +1,7 @@
 // The following is unnecessary if using CLI tarsy, but needed in browser testing
 var section = Tarsy.section,
-    assert = Tarsy.assert,
-    test = Tarsy.test
+	assert = Tarsy.assert,
+	test = Tarsy.test
 
 section("Tarsy.assert", function() {
 	test("assert(bool)", function() {
@@ -75,6 +75,11 @@ section("Tarsy.assert", function() {
 
 			//  these properties are in different order, but shouldn't matter
 			assert.deepEqual({a:1,b:2},{b:2,a:1})
+
+            // test native value edge cases
+            var a = { x: [0, null, undefined, NaN, true, false] },
+                b = { x: [0, null, undefined, NaN, true, false] }
+			assert.deepEqual(a, b)
 		})
 
 		test("assert.notDeepEqual", function() {
@@ -99,6 +104,50 @@ section("Tarsy.assert", function() {
 			assert.throws(function() {
 					assert.notDeepEqual({a:1,b:2},{b:2,a:1})
 				})
+
+			// **  test a variety of edge cases **
+
+			// expected property value of undefined
+			assert.notDeepEqual({a:undefined},{a:null})
+			assert.notDeepEqual({a:undefined},{a:0})
+			assert.notDeepEqual({a:undefined},{a:NaN})
+			assert.notDeepEqual({a:undefined},{a:false})
+			assert.notDeepEqual({a:undefined},{})
+
+			// expected value of null
+			assert.notDeepEqual({a:null},{a:undefined})
+			assert.notDeepEqual({a:null},{a:0})
+			assert.notDeepEqual({a:null},{a:NaN})
+			assert.notDeepEqual({a:null},{a:false})
+			assert.notDeepEqual({a:null},{})
+
+			// expected value of 0
+			assert.notDeepEqual({a:0},{a:undefined})
+			assert.notDeepEqual({a:0},{a:null})
+			assert.notDeepEqual({a:0},{a:NaN})
+			assert.notDeepEqual({a:0},{a:false})
+			assert.notDeepEqual({a:0},{})
+
+			// expected value of NaN
+			assert.notDeepEqual({a:NaN},{a:undefined})
+			assert.notDeepEqual({a:NaN},{a:null})
+			assert.notDeepEqual({a:NaN},{a:0})
+			assert.notDeepEqual({a:NaN},{a:false})
+			assert.notDeepEqual({a:NaN},{})
+
+			// expected value of false
+			assert.notDeepEqual({a:false},{a:undefined})
+			assert.notDeepEqual({a:false},{a:null})
+			assert.notDeepEqual({a:false},{a:0})
+			assert.notDeepEqual({a:false},{a:NaN})
+			assert.notDeepEqual({a:false},{})
+
+			// expected value does not exist
+			assert.notDeepEqual({},{a:undefined})
+			assert.notDeepEqual({},{a:null})
+			assert.notDeepEqual({},{a:0})
+			assert.notDeepEqual({},{a:NaN})
+			assert.notDeepEqual({},{a:false})
 		})
 
 		test("assert.throws", function() {
