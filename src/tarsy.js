@@ -1,7 +1,6 @@
 /*
 	Tarsy - The little test suite with BIG EYES
 	see https://github.com/bluejava/tarsy.git
-	version 0.5.1
 	Licence: MIT
 */
 
@@ -432,13 +431,16 @@
 			// primitive way (appending to body) - but should work well enough for a test suite.
 			//	msg : Text message to display
 			//	indent : Indent level (0-5) which sets a class for indenting the text
+			var outputNode = null
 			function appendLineToBrowserWindow(msg, indent)
 			{
-				// completely empty DIV elements have no height - so force some conten (non-breaking space)
+				// completely empty DIV elements have no height - so force some content (non-breaking space)
 				if(msg === "")
 					msg = "&nbsp;"
-				var logOutput = rootOptions.logOutput || document.body
-				logOutput.innerHTML += "<div class=\"Tarsy-indent" + indent + "\">" + msg + "</div>"
+				if(!outputNode)
+					outputNode = document.getElementById("tarsy-output") || document.body.appendChild(document.createElement("div"))
+
+					outputNode.innerHTML += "<div class=\"Tarsy-indent" + indent + "\">" + msg + "</div>"
 			}
 
 			// Once the browser DOM is ready, we can output any lines that were queued for output

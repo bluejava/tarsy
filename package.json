@@ -1,19 +1,17 @@
 {
 	"name": "tarsy",
-	"version": "0.5.1",
+	"version": "0.5.2",
 	"description": "Tarsy the Testing Tarsier - The little test framework with BIG EYES - JavaScript testing for busy people",
 	"main": "src/tarsy.js",
 	"preferGlobal": true,
-	"bin":
-	{
+	"bin": {
 		"tarsy": "src/cmd.js"
 	},
-	"scripts":
-	{
-		"test": "src/cmd.js test"
+	"scripts": {
+		"test": "src/cmd.js test",
+		"browserTest": "opn test/browserTest.html"
 	},
-	"keywords":
-	[
+	"keywords": [
 		"test",
 		"unit",
 		"testing",
@@ -22,5 +20,9 @@
 		"QA"
 	],
 	"author": "Glenn Crownover <glenn@bluejava.com> (http://www.bluejava.com)",
-	"license": "MIT"
+	"license": "MIT",
+	"devDependencies": {
+		"opn": "^5.1.0",
+		"opn-cli": "^3.1.0"
+	}
 }

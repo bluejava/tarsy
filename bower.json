@@ -1,6 +1,6 @@
 {
   "name": "tarsy",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Tarsy the Testing Tarsier - The little test framework with BIG EYES - JavaScript testing for busy people",
   "main": "src/tarsy.js",
   "authors": [
