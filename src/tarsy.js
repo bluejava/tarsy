@@ -693,11 +693,15 @@
 				}
 
 			ret.throws = function(fn) {
+					let erThrown = true // assume an error will be thrown
 					try {
 							fn()	// we expect this will throw an error and skip the next line
-							throw Error("Assertion throws failed to throw error.")
+							erThrown = false // hey! why you no throw error?
 						}
 					catch (err) { /* swallow the error, as it was expected */ }
+
+					if(!erThrown)
+						throw Error("Assertion throws failed to throw error.")
 				}
 
 			ret.rejects = function(fn) {
