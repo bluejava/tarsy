@@ -155,7 +155,7 @@ You simply get an output line for each test with its status and a time elapsed.
 You can divide your tests in to multiple sections for clarity. These sections can contain sections themselves by nesting the section calls. You can nest as deeply as you like.
 
 ```javascript
-var Tarsy = require("./src/tarsy.js")
+var Tarsy = require("tarsy")
 
 // For larger examples, its best to define these oft-used functions
 var assert = Tarsy.assert,
@@ -172,8 +172,8 @@ section("math", function() {
 	section("geometry", function() {
 		// geometry testing goes here
 		test("sin", function() {
-			assert.equal(Math.sin(0),0)
-			assert.equal(Math.sin(Math.PI / 2),1)
+			assert.equal(Math.sin(Math.PI / 2), 1)
+			assert.equal(Math.sin(Math.PI), 0)
 		})
 	})
 })
