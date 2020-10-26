@@ -15,6 +15,7 @@ Tarsy is a JavaScript test framework that focuses on simplicity, accuracy, and e
 - Supports running some (or all) tests synchronously if required
 - Simple `equal` asserts. No `assert.that.variable(foo).is.less.than(25)` stuff to memorize
 - Makes no attempts to be "smart" or "tricky" and inspect your calls for information - you can use Tarsy with any code constructs you wish (such as `[].map(test)`, etc.
+- Works with both CJS/UMD modules and ES6 modules
 
 -----------------
 
@@ -605,5 +606,5 @@ The following options are set via the `Tarsy.setRootOpts` to effect the root set
 | ------------ | --------------------------------------------------------------- | ------- |
 | **async**    | If false, each test will wait for the previous test to complete | `true`    |
 | **logOutput**  | When testing in browser, log output to this DOM element (root setting only) |`document.body` |
-| **section** | Used to specify the parent section for asynchronously assigned tests | *containing section* | 
+| **section** | Used to specify the parent section for asynchronously assigned tests | *containing section* |
 | **timeout**  | Number of ms to wait for asynchronous tests to complete         | `5000`    |

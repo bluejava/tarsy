@@ -25,6 +25,8 @@
 	Test files are simply javascript modules and will have access to Tarsy, section, test and assert. If the test file contains no
 	Node-specific code (such as extra asserts), it can be used within the browser as well.
 */
+
+require = require("esm")(module, { force: true})
 var path = require("path"),
 	fs = require("fs")
 
